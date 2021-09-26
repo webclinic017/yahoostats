@@ -1,6 +1,6 @@
 import unittest
 from selenium import webdriver
-from yahoostats.selenium_stats import Webscraper, ys_run, tr_run
+from yahoostats.selenium_stats import Webscraper, ys_run
 from yahoostats.evaluator import combine_stats
 
 
@@ -30,18 +30,11 @@ class TestMethods(unittest.TestCase):
         stock = 'GOOGL'
         self.assertTrue(ys_run(stock) is not None)
 
-    def test_tipranks_stats(self):
-        """
-        Test of getting tipranks data for GOOGL.
-        """
-        stock = 'GOOGL'
-        self.assertTrue(tr_run(stock) is not None)
-
     def test_evaluator(self):
         """
         Test of merging requests with selenium data
         """
-        stock_list = ['GOOGL', 'MU', 'NOSETETS']
+        stock_list = ['GOOGL', 'INTC', 'NOSETETS']
         self.assertTrue(combine_stats(stock_list) is not None)
 
 

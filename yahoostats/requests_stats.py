@@ -19,15 +19,15 @@ def get_page_content(url):
     Function to use requests.get on provided url with retry and delay between retries.
     """
     s = requests.Session()
-    retries = Retry(total=5,
-                    backoff_factor=0.3,
+    retries = Retry(total=3,
+                    backoff_factor=1,
                     status_forcelist=[500, 502, 503, 504])
     s.mount('http://', HTTPAdapter(max_retries=retries))
     s.mount('https://', HTTPAdapter(max_retries=retries))
     logger.debug(f'Fetching url: {url}')
     try:
         sleep(0.01)
-        res = s.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        res = s.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=3)
         if res.status_code == requests.codes['ok']:
             return res
     except Exception as exe:
@@ -158,31 +158,59 @@ def morningstar_stats(ticker):
         return {'ms_stars': "---"}
 
 
+# def zacks_stats(ticker):
+#     """
+#     Get Zacks start rating for specific stock.
+#     https://www.zacks.com/stock/chart/GTT/fundamental/peg-ratio-ttm
+#     https://www.zacks.com/stock/quote/GOOGL/financial-overview
+#     https://www.zacks.com/stock/quote/TSLA/financial-overview
+
+#     <div> class = 'zr_rankbox'
+#     <p> class = 'rank_view' .text
+#     added sleep for error code#104 on colab
+#     https://stackoverflow.com/questions/52051989/requests-exceptions-connectionerror-connection-aborted-connectionreseterro
+#     """
+#     logger.info('-----Zacks-----')
+#     logger.info(f'Fetching data for {ticker}')
+#     url = f'https://www.zacks.com/stock/quote/{ticker}/financial-overview'
+#     try:
+#         sleep(0.01)
+#         soup_zack = soup(get_page_content(url).content, "html.parser")
+#         rating_div = soup_zack.find('div', {'class': 'zr_rankbox'})
+#         rating_label = rating_div.find('p')
+#         rating_value = rating_label.text
+#     except Exception as exe:
+#         logger.warning(f'Unable to get data from zacks {exe}')
+#         rating_value = "---"
+#     return {'zacks_rate': rating_value.split()[0]}
+
 def zacks_stats(ticker):
     """
     Get Zacks start rating for specific stock.
-    https://www.zacks.com/stock/chart/GTT/fundamental/peg-ratio-ttm
-    https://www.zacks.com/stock/quote/GOOGL/financial-overview
-    https://www.zacks.com/stock/quote/TSLA/financial-overview
+    URL: https://quote-feed.zacks.com/index?t=INTC
+    Inputs:
+    --------------------
+    Ticker - stock symbol
 
-    <div> class = 'zr_rankbox'
-    <p> class = 'rank_view' .text
-    added sleep for error code#104 on colab
-    https://stackoverflow.com/questions/52051989/requests-exceptions-connectionerror-connection-aborted-connectionreseterro
+    Outputs:
+    ---------------------------
+    Dictionary with:
+    "zacks_rate" : zacks_rank - zacks_rank_text
     """
     logger.info('-----Zacks-----')
     logger.info(f'Fetching data for {ticker}')
-    url = f'https://www.zacks.com/stock/quote/{ticker}/financial-overview'
+    url = f'https://quote-feed.zacks.com/index?t={ticker}'
+    zacks_rate = None
+    ticker = ticker.upper()
     try:
-        sleep(0.01)
-        soup_zack = soup(get_page_content(url).content, "html.parser")
-        rating_div = soup_zack.find('div', {'class': 'zr_rankbox'})
-        rating_label = rating_div.find('p')
-        rating_value = rating_label.text
+        resp = get_page_content(url)
+        data = resp.json()
+        rank = data[f'{ticker}']['zacks_rank']
+        rank_text = data[f'{ticker}']['zacks_rank_text']
+        zacks_rate = f'{rank} - {rank_text}'
     except Exception as exe:
         logger.warning(f'Unable to get data from zacks {exe}')
-        rating_value = "---"
-    return {'zacks_rate': rating_value.split()[0]}
+    return {'zacks_rate': zacks_rate}
 
 
 def yahoo_api_financials(ticker):
@@ -239,3 +267,113 @@ def yahoo_api_financials(ticker):
               'yf_return_equity': y_return_equity,
               'yf_beta': beta}
     return result
+
+
+def tipranks_price(ticker):
+    """
+    URL https://market.tipranks.com/api/details/getstockdetailsasync/?&id=AMD
+    """
+    url_tr = f"https://market.tipranks.com/api/details/getstockdetailsasync/?&id={ticker}"
+    logger.info(f'-----Tipranks price-----')
+    logger.info(f'Fetching data for {ticker}')
+    logger.debug(f'Using requests on {url_tr}')
+    tr_price_now = None
+    try:
+        resp = get_page_content(url_tr)
+        data = resp.json()
+        tr_price_now = data[0]['price']
+    except Exception as exe:
+        logger.warning(f'Unable to get data from tipranks_price {exe} - {url_tr}')
+    return {'tr_price_now': tr_price_now}
+
+
+def tipranks_analysis(ticker):
+    """
+    URL https://www.tipranks.com/api/stocks/stockAnalysisOverview/?tickers=AMD
+    """
+    url_tr = f"https://www.tipranks.com/api/stocks/stockAnalysisOverview/?tickers={ticker}"
+    logger.info(f'-----Tipranks analysis-----')
+    logger.info(f'Fetching data for {ticker}')
+    logger.debug(f'Using requests on {url_tr}')
+    tr_score = None
+    tr_Fundamentals_ROE = None
+    tr_Fundamentals_Grow = None
+    tr_Technicals = None
+    tr_AnalystRatings = None
+    tr_HedgeFundActivity = None
+    tr_InsiderActivity = None
+    tr_TipRanksInvestors = None
+    tr_NewsSentiment = None
+    tr_BloggerOpinions = None
+    tr_target_pr = None
+    try:
+        resp = get_page_content(url_tr)
+        data = resp.json()
+        tr_score = data[0]['smartScore']
+        tr_Fundamentals_ROE = data[0]['fundamentalsReturnOnEquity']
+        tr_Fundamentals_Grow = data[0]['fundamentalsAssetGrowth']
+        tr_Technicals = data[0]['sma']
+        tr_AnalystRatings = data[0]['analystConsensus']
+        tr_HedgeFundActivity = data[0]['hedgeFundTrend']
+        tr_InsiderActivity = data[0]['insiderTrend']
+        tr_TipRanksInvestors = data[0]['investorSentiment']
+        tr_NewsSentiment = data[0]['newsSentiment']
+        tr_BloggerOpinions = data[0]['bloggerConsensus']
+        tr_target_pr = data[0]['priceTarget']
+    except Exception as exe:
+        logger.warning(f'Unable to get data from tipranks_price {exe} - {url_tr}')
+    return {'tr_score': tr_score, 'tr_Fundamentals_ROE': tr_Fundamentals_ROE,
+            'tr_Fundamentals_Grow': tr_Fundamentals_Grow, 'tr_Technicals': tr_Technicals,
+            'tr_AnalystRatings': tr_AnalystRatings, 'tr_HedgeFundActivity': tr_HedgeFundActivity,
+            'tr_InsiderActivity': tr_InsiderActivity, 'tr_TipRanksInvestors': tr_TipRanksInvestors,
+            'tr_NewsSentiment': tr_NewsSentiment, 'tr_BloggerOpinions': tr_BloggerOpinions,
+            'tr_target_pr': tr_target_pr}
+
+
+def tipranks_dividends(ticker):
+    """
+    URL https://www.tipranks.com/api/dividends/getByTicker/?name=INTC&break=1612288126999
+
+    """
+    url_tr = f"https://www.tipranks.com/api/dividends/getByTicker/?name={ticker}"
+    logger.info(f'-----Tipranks dividends-----')
+    logger.info(f'Fetching data for {ticker}')
+    logger.debug(f'Using requests on {url_tr}')
+    next_ex_dividend_date, dividend_amount, dividend_perc = None, None, None
+    ex_date1, ex_date2, ex_date3, ex_date4, ex_date5 = None, None, None, None, None
+    try:
+        resp = get_page_content(url_tr)
+        data = resp.json()
+        next_ex_dividend_date = data[0]['exDate']
+        dividend_amount = data[0]['amount']
+        dividend_perc = data[0]['yield']
+        ex_date1 = data[1]['exDate']
+        ex_date2 = data[2]['exDate']
+        ex_date3 = data[3]['exDate']
+        ex_date4 = data[4]['exDate']
+        ex_date5 = data[5]['exDate']
+    except Exception as exe:
+        logger.warning(f'Unable to get data from tipranks_dividends {exe} - {url_tr}')
+    return {"tr_next_ex_dividend_date": next_ex_dividend_date, "tr_dividend_amount": dividend_amount,
+            "dividend_perc": dividend_perc, "tr_ex_date1": ex_date1, "tr_ex_date2": ex_date2,
+            "tr_ex_date3": ex_date3, "tr_ex_date4": ex_date4, "tr_ex_date5": ex_date5}
+
+
+def seeking_alpha(ticker):
+    """
+    URL https://seekingalpha.com/symbol/INTC/ratings/analysis_summary_data
+    """
+    url = f"https://seekingalpha.com/symbol/{ticker}/ratings/analysis_summary_data"
+    logger.info(f'-----Seeking alpha-----')
+    logger.info(f'Fetching data for {ticker}')
+    logger.debug(f'Using requests on {url}')
+    sa_rating = None
+    sa_target_price = None
+    try:
+        resp = get_page_content(url)
+        data = resp.json()
+        sa_rating = data['data']['rating']
+        sa_target_price = data['data']['target_price']
+    except Exception as exe:
+        logger.warning(f'Unable to get data from seeking_alpha {exe} - {url}')
+    return {'sa_rating': sa_rating, 'sa_target_price': sa_target_price}

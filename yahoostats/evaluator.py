@@ -1,6 +1,7 @@
 from yahoostats.selenium_stats import Webscraper
-from yahoostats.requests_stats import yahoo_api_financials, morningstar_stats
+from yahoostats.requests_stats import yahoo_api_financials, morningstar_stats, seeking_alpha
 from yahoostats.requests_stats import zacks_stats, filter_reuters, reuters_stats
+from yahoostats.requests_stats import tipranks_price, tipranks_analysis, tipranks_dividends
 import configparser
 from pprint import pprint as pp
 from yahoostats.logger import logger
@@ -46,23 +47,48 @@ def combine_stats(stock_list, browser="Chrome"):
         ms_rate = morningstar_stats(stock)
         zs_rate = zacks_stats(stock)
         re_rate = filter_reuters(reuters_stats(stock))
+        tr_analys = tipranks_analysis(stock)
+        tr_rate = tipranks_price(stock)
+        tr_divid = tipranks_dividends(stock)
+        sa_rate = seeking_alpha(stock)
 
         yf_pegr = tr.get_yahoo_statistics(stock)
-        tr_analys = tr.tipranks_analysis((stock))
-        tr_rate = tr.tipranks_price((stock))
+        wallst_eps = tr.estimize_eps(stock)
         stock_data[stock].update(tr_analys)
         stock_data[stock].update(tr_rate)
+        stock_data[stock].update(tr_divid)
         stock_data[stock].update(yf_pegr)
+        stock_data[stock].update(sa_rate)
 
         stock_data[stock].update(yf_rate)
         stock_data[stock].update(ms_rate)
         stock_data[stock].update(zs_rate)
         stock_data[stock].update(re_rate)
+        stock_data[stock].update(wallst_eps)
         time.sleep(0.5)
     tr.stop()
     logger.info(f'Merging data for {stock_list}')
     pd_df = pd.DataFrame(stock_data)
     return pd_df
+
+def future_dividends(df):
+    """
+    Inputs:
+    ------------------
+    df - webscraped data
+
+    Outputs:
+    ------------------
+    Pandas DataFrame with future dividends calendar
+    """
+    logger.info(f'Cleaning webscraped data for for future dividends')
+    df = df.T
+    div_data = df[['tr_price','tr_next_ex_dividend_date', 'tr_dividend_amount','r_div_yield5','r_div_yield']]
+    div_data['tr_next_ex_dividend_date'] = pd.to_datetime(div_data['tr_next_ex_dividend_date'])
+    div_data = div_data.sort_values(by=['tr_next_ex_dividend_date'])
+    div_data['tr_dividend_amount'] = div_data['tr_dividend_amount'].str.replace('Currency in US Dollar','$')
+    # div_data[div_data['tr_next_ex_dividend_date'] > pd.to_datetime('today')]
+    return div_data
 
 
 # if __name__ == "__main__":

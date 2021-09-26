@@ -9,7 +9,8 @@ yahoostats
 [![PyPi version](https://img.shields.io/pypi/v/yahoostats)](https://pypi.python.org/pypi/yahoostats)
 [![PyPi status](https://img.shields.io/pypi/status/yahoostats)](https://pypi.python.org/pypi/yahoostats)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/yahoostats)](https://pypi.python.org/pypi/yahoostats)
-[![Docs](https://img.shields.io/badge/Docs-Documentation-green)](https://hristo-mavrodiev.github.io/yahoostats/)
+[![Docs](https://img.shields.io/badge/Read-the_docs-green)](https://hristo-mavrodiev.github.io/yahoostats/)
+[![Build Status](https://dev.azure.com/hmavrodiev/hmavrodiev/_apis/build/status/hristo-mavrodiev.yahoostats?branchName=dev)](https://dev.azure.com/hmavrodiev/hmavrodiev/_build/latest?definitionId=4&branchName=dev)
 [![Star this repo](https://img.shields.io/github/stars/hristo-mavrodiev/yahoostats)](https://github.com/hristo-mavrodiev/yahoostats)
 [![image](https://img.shields.io/badge/Donate-Buy_me_a_coffee-blue.svg)](https://www.buymeacoffee.com/hristomavrodiev)
 
@@ -50,18 +51,27 @@ tr_Technicals                        Negative
 tr_Fundamentals                        17.83%
 tr_target_pr                         1482.030    Tipranks target price after 12 months
 tr_change                    ▲ (7.06% Upside)    Tipranks
+tr_next_ex_dividend_date                 None    Tipranks Next Ex-dividend Date
+tr_dividend_amount                       None    Tipranks Next dividend amount
+ex_date1                          Nov 9, 2020    Tipranks ex-dividend date history
+ex_date2                          Aug 7, 2020    Tipranks ex-dividend date history 
+ex_date3                          May 7, 2020    Tipranks ex-dividend date history
+ex_date4                          Feb 7, 2020    Tipranks ex-dividend date history
+ex_date5                          Nov 7, 2019    Tipranks ex-dividend date history
 PEG Ratio (5 yr expected) 1              1.94    Yahoo Finance PEG Ratio
-yf_pr_now                             1384.34    Yahoo Finance price now
-yf_pr_trg                             1515.73    Yahoo Finance target price
-yf_rv                                     1.8    Yahoo Finance recomendation score
-yf_rs                                     buy    Yahoo Finance recomendation
-yf_prof                               1.09491    Yahoo finance profit (target/current price)
-yf_cur_ratio                            3.658    Yahoo Finance Current ratio
-yf_ret_assets                         0.08712    Yahoo Finance Return on assets
-yf_ret_equity                         0.17835    Yahoo Finance Return on equity
+sa_rating                             3.20513    Seeking alpha rating 1(bearish) ÷ 5 bullish
+sa_target_price                       1550.73    Seeking alpha target price
+yf_price_now                          1384.34    Yahoo Finance price now
+yf_price_target                       1515.73    Yahoo Finance target price
+yf_ratingvalue                            1.8    Yahoo Finance recomendation score
+yf_ratingstring                           buy    Yahoo Finance recomendation
+yf_profit                             1.09491    Yahoo finance profit (target/current price)
+yf_current_ratio                        3.658    Yahoo Finance Current ratio
+yf_return_assets                      0.08712    Yahoo Finance Return on assets
+yf_return_equity                      0.17835    Yahoo Finance Return on equity
 yf_beta                                1.0649    Yahoo Finance Beta factor
-ms                                    r_star3    Morningstar star rating [0-5]stars
-zacks                                  3-Hold    Zacks.com recomentations
+ms_stars                              r_star3    Morningstar star rating [0-5]stars
+zacks_rate                             3-Hold    Zacks.com recomentations
 r_beta                                   1.06    Reuters Beta factor
 r_eps_gr3                               20.82    Reuters EPS_Grow 3 years
 r_eps_gr5                               19.92    Reuters EPS Grow 5y
@@ -76,6 +86,15 @@ r_div_yield                                --    Reuters dividents yeld
 r_div_yield5                               --    Reuters dividents yeld 5 years
 r_rev_employee                   1,401,837.00    Reuters Revenue/Employee
 r_eps                                   51.27    Reuters Deluted EPS
+eps_-4q                                 12.76    Estimated EPS 2020Q1- Wall st consensus 
+eps_-3q                                 10.66    Estimated EPS 2020Q2
+eps_-2q                                  7.95    Estimated EPS 2020Q3
+eps_-1q                                 11.28    Estimated EPS 2020Q4
+eps_cur                                 15.74    Estimated EPS 2021Q1
+eps_+1q                                 13.51    Estimated EPS 2020Q2
+eps_+2q                                 14.03    Estimated EPS 2020Q3
+eps_+3q                                 16.41    Estimated EPS 2020Q4
+
 ```
 
 
@@ -109,7 +128,7 @@ rm -rf /opt/firefox
 tar -C /opt -xvjf /tmp/firefox.tar.bz2 
 rm /tmp/firefox.tar.bz2 
 mv /opt/firefox /opt/firefox-$FIREFOX_VERSION 
-ln -fs /opt/firefox-$FIREFOX_VERSION/firefox /usr/bin/firefox
+sudo ln -fs /opt/firefox-$FIREFOX_VERSION/firefox /usr/bin/firefox
 
 GECKO_VERSION=0.26.0
 wget https://github.com/mozilla/geckodriver/releases/download/v$GECKO_VERSION/geckodriver-v$GECKO_VERSION-linux64.tar.gz  
@@ -146,7 +165,7 @@ Python Requirements
 -   pandas==1.0.3
 -   requests&gt;=2.21.0
 -   beautifulsoup4==4.6.3
--   urllib3==1.24.3
+-   urllib3==1.25.9
 -   selenium==3.141.0
 
 License

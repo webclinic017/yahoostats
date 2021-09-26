@@ -84,78 +84,37 @@ class Webscraper:
 
         return stock_data
 
-    def tipranks_analysis(self, ticker):
+
+    def estimize_eps(self, ticker):
         """
-        https://www.tipranks.com/stocks/amd/stock-analysis
+        https://www.estimize.com/{ticker}/?metric_name=eps&chart=table
         """
-        url_tr = f'https://www.tipranks.com/stocks/{ticker}/stock-analysis'
-        logger.info(f'-----Tipranks-----')
+        url_ez = f'https://www.estimize.com/{ticker}/?metric_name=eps&chart=table'
+        logger.info(f'-----estimize_eps-----')
         logger.info(f'Fetching data for {ticker}')
-        logger.debug(f'Using selenium on {url_tr}')
-        data = {}
+        logger.debug(f'Using selenium on {url_ez}')
+        eps_0, eps_1, eps_2, eps_3 = None, None, None, None
+        eps_p1, eps_p2, eps_p3, eps_p4 = None, None, None, None
         try:
-            self.__driver.get(url_tr)
+            self.__driver.get(url_ez)
             time.sleep(1)
             soup = BeautifulSoup(self.__driver.page_source, "html.parser")
-            div_tr_score = soup.find('div', {
-                'class': "client-components-ValueChange-shape__Octagon"})
-            text_tr_score = div_tr_score.find('tspan').text + "/10"
-            data.update({'tr_score': text_tr_score})
-
-            div_boxes = soup.find_all('div', {
-                'class': ("client-components-stock-research-smart-score-Factor-"
-                          "Factor__Factor")
-            })
-            for box in div_boxes[:8]:
-                k = "tr_" + box.find('header').text
-                v = box.find_all('div')[0].find_all('div')[0].text
-                data.update({k: v})
         except Exception as exe:
-            logger.warning(exe)
-
-        return data
-
-    def tipranks_price(self, ticker):
-        """
-        Webscrape price prediction for the next 12 months.
-        https://www.tipranks.com/stocks/amd/price-target
-        http://theautomatic.net/2019/01/19/scraping-data-from-javascript-webpage-python/
-        price - target value
-        <div class="client-components-stock-research-analysts-price-target-style__actualMoney">
-
-        <div class="client-components-stock-research-analysts-price-target-style__change">
-        """
-
-        url_tr = f'https://www.tipranks.com/stocks/{ticker}/price-target'
-        logger.info(f'-----tipranks_price-----')
-        logger.info(f'Fetching data for {ticker}')
-        logger.debug(f'Using selenium on {url_tr}')
-        target_pr, target_change = None, None
-
+            logger.warning(f"Unable to fetch url{url_ez} -{ticker} -{exe}.")
         try:
-            self.__driver.get(url_tr)
-            time.sleep(2)
-            soup = BeautifulSoup(self.__driver.page_source, "html.parser")
-            div_target_pr = soup.find('div', {
-                'class': "client-components-stock-research-analysts-price-target-style__actualMoney"})
-            target_pr = div_target_pr.find('span')['title']
-
-            div_target_prof = soup.find(
-                'div', {"class": "client-components-stock-research-analysts-price-target-style__change"})
-            target_change = div_target_prof.find('span').text
+            wallst_data = soup.find('tbody', {"class": "rel-chart-tbl-group rel-chart-tbl-group-wall-street"}).find_all('tr')[0]
+            eps_0 = wallst_data.find_all('td')[-4].text
+            eps_1 = wallst_data.find_all('td')[-3].text
+            eps_2 = wallst_data.find_all('td')[-2].text
+            eps_3 = wallst_data.find_all('td')[-1].text
+            eps_p1 = wallst_data.find_all('td')[-5].text
+            eps_p2 = wallst_data.find_all('td')[-6].text
+            eps_p3 = wallst_data.find_all('td')[-7].text
+            eps_p4 = wallst_data.find_all('td')[-8].text
         except Exception as exe:
-            logger.warning(f"Website changed {exe}")
-
-        return {"tr_target_pr": target_pr, "tr_change": target_change}
-
-    # def simplywall(self, ticker):
-    #     """
-    #     https://simplywall.st/stocks/us/media/nasdaq-goog.l/alphabet
-    #     https://simplywall.st/stocks/us/software/nyse-gtt/gtt-communications
-    #     NOT IMPLEMENTED
-    #     url_sw = 'https://simplywall.st/stocks/us'
-    #     """
-    #     pass
+            logger.warning(f"Unable to get eps{url_ez} -{ticker} -{exe}.")
+        return {"eps_-4q": eps_p4, "eps_-3q": eps_p3, "eps_-2q": eps_p2, "eps_-1q": eps_p1,
+                "eps_cur": eps_0, "eps_+1q": eps_1, "eps_+2q": eps_2, "eps_+3q": eps_3}
 
     def scroll(self, px):
         self.__driver.execute_script(f"window.scrollTo(0, {px})")
@@ -184,13 +143,4 @@ def ys_run(ticker, browser="Chrome"):
     yh.accept_yf_cockies()
     result_df = (yh.get_yahoo_statistics(ticker))
     yh.stop()
-    return result_df
-
-
-def tr_run(ticker, browser="Chrome"):
-    tr = Webscraper(browser)
-    tr.start()
-    result_df = tr.tipranks_analysis((ticker))
-    result_df.update(tr.tipranks_price((ticker)))
-    tr.stop()
     return result_df
